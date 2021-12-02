@@ -887,7 +887,9 @@ class TCPConnector(BaseConnector):
         'DHE-RSA-AES256-SHA256', 'AES128-GCM-SHA256', 'AES256-GCM-SHA384', 'AES128-SHA256', 'AES256-SHA256', 'AES128-SHA',
         'AES256-SHA', 'DES-CBC3-SHA'
         ])
-        sslcontext = ssl_.create_urllib3_context(ciphers=CIPHERS, cert_reqs=ssl.CERT_REQUIRED, options=ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+        sslcontext = ssl_.create_urllib3_context(ciphers=CIPHERS, cert_reqs=ssl.CERT_NONE, options=ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+        sslcontext.check_hostname = False
+        sslcontext.verify_mode = ssl.CERT_NONE
         return sslcontext
 
 
