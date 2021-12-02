@@ -62,9 +62,23 @@ jobs:
     - name: Making sure that CONTRIBUTORS.txt remains sorted
       run: |
         LC_ALL=C sort --check --ignore-case CONTRIBUTORS.txt
-    - uses: actions/checkout@v2
-    - uses: ncipollo/release-action@v1
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        artifacts: "aiohttp-4.0.0a1.tar.gz,aiohttp-4.0.0a1-py3-none-any.whl"
-        bodyFile: "body.md"
-        token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: ./aiohttp-4.0.0a1.tar.gz
+        asset_name: aiohttp-4.0.0a1.tar.gz
+        asset_content_type: application/zip
