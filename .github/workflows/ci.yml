@@ -51,19 +51,6 @@ jobs:
         python -m pip install .
       env:
         AIOHTTP_NO_EXTENSIONS: 1
-    - name: Run linters
-      run: |
-        make mypy
-    - name: Install libenchant-dev
-      run: |
-        sudo apt install libenchant-dev
-    - name: Install spell checker
-      run: |
-        pip install -r requirements/doc-spelling.txt -c requirements/constraints.txt
-    - name: Run docs spelling
-      run: |
-        # towncrier --yes  # uncomment me after publishing a release
-        make doc-spelling
     - name: Build package
       run: |
         python -m build
