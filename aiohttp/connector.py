@@ -4,6 +4,7 @@ import functools
 import logging
 import random
 import sys
+import ssl
 import traceback
 import warnings
 from collections import defaultdict, deque
@@ -50,20 +51,11 @@ from .http import RESPONSES
 from .locks import EventResultOrError
 from .resolver import DefaultResolver
 
+SSLContext = ssl.SSLContext
+
 try:
     import ssl
     from urllib3.util import ssl_
-    CIPHERS = ':'.join([
-        'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-RSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-AES256-GCM-SHA384',
-        'ECDHE-RSA-AES256-GCM-SHA384', 'ECDHE-ECDSA-CHACHA20-POLY1305', 'ECDHE-RSA-CHACHA20-POLY1305',
-        'DHE-RSA-AES128-GCM-SHA256', 'DHE-RSA-AES256-GCM-SHA384', 'DHE-RSA-CHACHA20-POLY1305', 'ECDHE-ECDSA-AES128-SHA256',
-        'ECDHE-RSA-AES128-SHA256', 'ECDHE-ECDSA-AES128-SHA', 'ECDHE-RSA-AES128-SHA', 'ECDHE-ECDSA-AES256-SHA384',
-        'ECDHE-RSA-AES256-SHA384', 'ECDHE-ECDSA-AES256-SHA', 'ECDHE-RSA-AES256-SHA', 'DHE-RSA-AES128-SHA256',
-        'DHE-RSA-AES256-SHA256', 'AES128-GCM-SHA256', 'AES256-GCM-SHA384', 'AES128-SHA256', 'AES256-SHA256', 'AES128-SHA',
-        'AES256-SHA', 'DES-CBC3-SHA'
-    ])
-    SSLContext = ssl_.create_urllib3_context(ciphers=CIPHERS, cert_reqs=ssl.CERT_REQUIRED, options=ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)  # type: ignore[misc,assignment]
-    #SSLContext = ssl.SSLContext
 except ImportError:  # pragma: no cover
     ssl = None  # type: ignore[assignment]
     SSLContext = object  # type: ignore[misc,assignment]
@@ -884,25 +876,19 @@ class TCPConnector(BaseConnector):
     @staticmethod
     @functools.lru_cache(None)
     def _make_ssl_context(verified: bool) -> SSLContext:
-        if verified:
-            return ssl.create_default_context()
-        else:
-            sslcontext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            sslcontext.options |= ssl.OP_NO_SSLv2
-            sslcontext.options |= ssl.OP_NO_SSLv3
-            sslcontext.check_hostname = False
-            sslcontext.verify_mode = ssl.CERT_NONE
-            try:
-                sslcontext.options |= ssl.OP_NO_COMPRESSION
-            except AttributeError as attr_err:
-                warnings.warn(
-                    "{!s}: The Python interpreter is compiled "
-                    "against OpenSSL < 1.0.0. Ref: "
-                    "https://docs.python.org/3/library/ssl.html"
-                    "#ssl.OP_NO_COMPRESSION".format(attr_err),
-                )
-            sslcontext.set_default_verify_paths()
-            return sslcontext
+        from urllib3.util import ssl_
+        CIPHERS = ':'.join([
+        'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-RSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-AES256-GCM-SHA384',
+        'ECDHE-RSA-AES256-GCM-SHA384', 'ECDHE-ECDSA-CHACHA20-POLY1305', 'ECDHE-RSA-CHACHA20-POLY1305',
+        'DHE-RSA-AES128-GCM-SHA256', 'DHE-RSA-AES256-GCM-SHA384', 'DHE-RSA-CHACHA20-POLY1305', 'ECDHE-ECDSA-AES128-SHA256',
+        'ECDHE-RSA-AES128-SHA256', 'ECDHE-ECDSA-AES128-SHA', 'ECDHE-RSA-AES128-SHA', 'ECDHE-ECDSA-AES256-SHA384',
+        'ECDHE-RSA-AES256-SHA384', 'ECDHE-ECDSA-AES256-SHA', 'ECDHE-RSA-AES256-SHA', 'DHE-RSA-AES128-SHA256',
+        'DHE-RSA-AES256-SHA256', 'AES128-GCM-SHA256', 'AES256-GCM-SHA384', 'AES128-SHA256', 'AES256-SHA256', 'AES128-SHA',
+        'AES256-SHA', 'DES-CBC3-SHA'
+        ])
+        sslcontext = ssl_.create_urllib3_context(ciphers=CIPHERS, cert_reqs=ssl.CERT_REQUIRED, options=ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+        return sslcontext
+
 
     def _get_ssl_context(self, req: "ClientRequest") -> Optional[SSLContext]:
         """Logic to get the correct SSL context
