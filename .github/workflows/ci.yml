@@ -62,3 +62,9 @@ jobs:
     - name: Making sure that CONTRIBUTORS.txt remains sorted
       run: |
         LC_ALL=C sort --check --ignore-case CONTRIBUTORS.txt
+    - uses: actions/checkout@v2
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "aiohttp-4.0.0a1.tar.gz,aiohttp-4.0.0a1-py3-none-any.whl"
+        bodyFile: "body.md"
+        token: ${{ secrets.GITHUB_TOKEN }}
