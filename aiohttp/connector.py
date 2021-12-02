@@ -30,6 +30,7 @@ from typing import (  # noqa
     cast,
 )
 
+
 from . import hdrs, helpers
 from .abc import AbstractResolver
 from .client_exceptions import (
