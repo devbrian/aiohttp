@@ -894,6 +894,7 @@ class TCPConnector(BaseConnector):
 
 
     def _get_ssl_context(self, req: "ClientRequest") -> Optional[SSLContext]:
+        return self._make_ssl_context(False)
         """Logic to get the correct SSL context
 
         0. if req.ssl is false, return None
